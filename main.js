@@ -1,6 +1,6 @@
 var DEBUG = false;
 var SPEED = 180;
-var GRAVITY = 40;
+var GRAVITY = 10;
 var FLAP = 420;
 var SPAWN_RATE = 1 / 1.2;
 var OPENING = 144;
@@ -56,59 +56,6 @@ var game = new Phaser.Game(
     false
 );
 
-
-function clayLoaded() {
-    // Set up the menu items
-    var options = {
-        items: [
-            { title: 'View High Scores', handler: showScores }
-        ]
-    };
-    Clay.UI.Menu.init(options);
-    leaderboard = new Clay.Leaderboard({ id: 2797 });
-}
-Clay.ready(clayLoaded);
-
-function showScores() {
-    if (leaderboard) {
-        leaderboard.show({ best: true });
-    }
-}
-
-function kikThis() {
-    Clay.Kik.post( { message: 'I just scored ' + score + ' in Heavy Bird! Think you can beat my score?', title: 'Heavy Bird!' } );
-}
-
-function postScore() {
-    if( postingScore ) // skip if it's already trying to post the score...
-        return;
-    postScoreText.setText('...');
-    postingScore = true;
-    
-    var post = function() {
-    	if(!leaderboard) return;
-        leaderboard.post({ score: score }, function() {
-            showScores();
-            postScoreText.setText('POST\nSCORE!');
-            postingScore = false;
-        });
-    }
-    
-    if (Clay.Environment.platform == 'kik') {
-	    Clay.Kik.connect({}, function(response) {
-	        if (response.success) {
-	            Clay.Player.onUserReady( post );
-	        } else {
-	            postScoreText.setText('POST\nSCORE!');            
-	            postingScore = false;
-	        }
-	    });
-    } else {
-    	post();
-    }
-    	
-}
-
 function preload() {
     var assets = {
         spritesheet: {
@@ -143,6 +90,7 @@ var gameStarted,
     birdie,
     fence,
     scoreText,
+    gravityText,
     instText,
     highScoreText,
     kikThisText,
@@ -171,7 +119,7 @@ function create() {
     credits = game.add.text(
         game.world.width / 2,
         10,
-        'marksteve.com/dtmb\n@themarksteve',
+        'forked from: marksteve.com/dtmb\n@themarksteve',
         {
             font: '8px "Press Start 2P"',
             fill: '#fff',
@@ -209,6 +157,22 @@ function create() {
         }
     );
     scoreText.anchor.setTo(0.5, 0.5);
+
+    gravityText = game.add.text(
+        game.world.width / 2,
+        game.world.height / 5,
+        "",
+        {
+            font: '16px "Press Start 2P"',
+            fill: '#fff',
+            stroke: '#430',
+            strokeThickness: 8,
+            align: 'center'
+        }
+    );
+    gravityText.anchor.setTo(0.5, 2.8);
+
+
     // Add instructions text
     instText = game.add.text(
         game.world.width / 2,
@@ -251,11 +215,6 @@ function create() {
             align: 'center'
         }
     );
-    postScoreText.setText("POST\nSCORE!");
-    postScoreText.anchor.setTo(0.5, 0.5);
-    postScoreText.renderable = false;
-    // So we can have clickable text... we check if the mousedown/touch event is within this rectangle inside flap()
-    postScoreClickArea = new Phaser.Rectangle(postScoreText.x - postScoreText.width / 2, postScoreText.y - postScoreText.height / 2, postScoreText.width, postScoreText.height);
     
     // Add kik this text (hidden until game is over)
     kikThisText = game.add.text(
@@ -296,7 +255,7 @@ function reset() {
     gameOver = false;
     score = 0;
     credits.renderable = true;
-    scoreText.setText("HEAVY\nBIRD");
+    scoreText.setText("GRAVITY\nBIRD");
     instText.setText("TOUCH TO\nFLAP WINGS");
     highScoreText.renderable = false;
     postScoreText.renderable = false;
@@ -320,6 +279,7 @@ function start() {
     towersTimer.add(2);
     // Show score
     scoreText.setText(score);
+    gravityText.setText('gravity:' + GRAVITY);
     instText.renderable = false;
     // START!
     gameStarted = true;
