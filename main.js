@@ -112,7 +112,7 @@ function postScore() {
 function preload() {
     var assets = {
         spritesheet: {
-            birdie: ['assets/nasa_astronaut.png', 24, 24],
+            birdie: ['assets/birdie.png', 24, 24],
             clouds: ['assets/clouds.png', 128, 64]
         },
         image: {
